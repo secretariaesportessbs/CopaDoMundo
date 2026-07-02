@@ -1,0 +1,71 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { AnimatePresence } from "framer-motion";
+import type { WorldCupData } from "@/types";
+import { useWorldCupData } from "@/hooks/useWorldCupData";
+import { buildBracketLayout, type BracketNode } from "@/utils/buildBracketLayout";
+import { BracketEdges } from "./BracketEdges";
+import { TrophyCenter } from "./TrophyCenter";
+import { TeamNode } from "@/components/TeamNode/TeamNode";
+import { MatchTooltip } from "@/components/Tooltip/MatchTooltip";
+
+interface CircularBracketProps {
+  initialData: WorldCupData;
+}
+
+/**
+ * Árvore circular do mata-mata: taça no centro, fases em anéis concêntricos,
+ * seleções avançando por linhas douradas. No mobile, arraste horizontalmente.
+ */
+export function CircularBracket({ initialData }: CircularBracketProps) {
+  const { data } = useWorldCupData(initialData);
+  const [hovered, setHovered] = useState<BracketNode | null>(null);
+  const [selected, setSelected] = useState<BracketNode | null>(null);
+
+  const layout = useMemo(
+    () => buildBracketLayout(data.teams, data.matches, data.rounds),
+    [data]
+  );
+
+  const activeNode = hovered ?? selected;
+
+  return (
+    <div
+      className="bracket-scroll w-full cursor-grab overflow-x-auto overscroll-x-contain active:cursor-grabbing"
+      onClick={() => setSelected(null)}
+    >
+      <div className="relative mx-auto aspect-square w-full min-w-[860px] max-w-[1080px] select-none">
+        <BracketEdges edges={layout.edges} />
+        <TrophyCenter champion={layout.champion} />
+
+        {layout.nodes.map((node) => (
+          <TeamNode
+            key={node.id}
+            node={node}
+            onHover={setHovered}
+            onSelect={(clicked) => {
+              setSelected((current) =>
+                current?.id === clicked.id ? null : clicked
+              );
+            }}
+          />
+        ))}
+
+        <AnimatePresence>
+          {activeNode?.match && (
+            <MatchTooltip
+              key={activeNode.id}
+              node={activeNode}
+              teams={data.teams}
+            />
+          )}
+        </AnimatePresence>
+      </div>
+
+      <p className="pb-6 pt-2 text-center text-xs text-stone-500 md:hidden">
+        Arraste para o lado para explorar o chaveamento
+      </p>
+    </div>
+  );
+}
