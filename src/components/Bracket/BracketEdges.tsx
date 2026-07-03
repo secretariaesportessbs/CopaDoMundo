@@ -1,10 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import type { BracketEdge } from "@/utils/buildBracketLayout";
+import type { BracketEdge, BracketPairing } from "@/utils/buildBracketLayout";
 
 interface BracketEdgesProps {
   edges: BracketEdge[];
+  pairings: BracketPairing[];
 }
 
 function toPath(edge: BracketEdge): string {
@@ -13,7 +14,7 @@ function toPath(edge: BracketEdge): string {
 }
 
 /** Camada SVG com as linhas do chaveamento; caminhos vencedores em dourado animado. */
-export function BracketEdges({ edges }: BracketEdgesProps) {
+export function BracketEdges({ edges, pairings }: BracketEdgesProps) {
   return (
     <svg
       className="absolute inset-0 h-full w-full"
@@ -21,6 +22,18 @@ export function BracketEdges({ edges }: BracketEdgesProps) {
       preserveAspectRatio="xMidYMid meet"
       aria-hidden
     >
+      {pairings.map((pairing) => (
+        <path
+          key={pairing.id}
+          d={pairing.path}
+          fill="none"
+          stroke={pairing.status === "live" ? "#e8b64c" : "#8a7a5c"}
+          strokeOpacity={pairing.status === "live" ? 0.9 : 0.5}
+          strokeWidth={pairing.status === "live" ? 0.5 : 0.38}
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+        />
+      ))}
       {edges.map((edge) => (
         <g key={edge.id}>
           <path

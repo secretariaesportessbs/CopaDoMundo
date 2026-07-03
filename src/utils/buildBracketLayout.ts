@@ -22,9 +22,16 @@ export interface BracketEdge {
   active: boolean;
 }
 
+export interface BracketPairing {
+  id: string;
+  path: string;
+  status: Match["status"];
+}
+
 export interface BracketLayout {
   nodes: BracketNode[];
   edges: BracketEdge[];
+  pairings: BracketPairing[];
   champion: Team | null;
 }
 
@@ -52,7 +59,7 @@ export function buildBracketLayout(
     .filter((round) => matches.some((match) => match.round === round.round_name));
 
   const ringCount = knockoutRounds.length;
-  if (ringCount === 0) return { nodes: [], edges: [], champion: null };
+  if (ringCount === 0) return { nodes: [], edges: [], pairings: [], champion: null };
 
   const radiusStep =
     ringCount > 1 ? (OUTER_RADIUS - INNER_RADIUS) / (ringCount - 1) : 0;
@@ -65,6 +72,7 @@ export function buildBracketLayout(
 
   const nodes: BracketNode[] = [];
   const nodesByRing: BracketNode[][] = [];
+  const pairings: BracketPairing[] = [];
 
   knockoutRounds.forEach((round, ringIndex) => {
     const ringMatches = matchesByRound[ringIndex];
@@ -112,6 +120,18 @@ export function buildBracketLayout(
       nodes.push(node);
       ringNodes.push(node);
     }
+
+    ringMatches.forEach((match, matchIndex) => {
+      const home = ringNodes[matchIndex * 2];
+      const away = ringNodes[matchIndex * 2 + 1];
+      if (!home || !away) return;
+
+      pairings.push({
+        id: `pair-${home.id}-${away.id}`,
+        path: `M ${home.x} ${home.y} A ${radius} ${radius} 0 0 1 ${away.x} ${away.y}`,
+        status: match.status,
+      });
+    });
 
     nodesByRing.push(ringNodes);
   });
@@ -165,5 +185,5 @@ export function buildBracketLayout(
       ? teamById.get(finalMatch.winner_team_id) ?? null
       : null;
 
-  return { nodes, edges, champion };
+  return { nodes, edges, pairings, champion };
 }

@@ -15,8 +15,10 @@ interface CircularBracketProps {
 }
 
 /**
- * Árvore circular do mata-mata: taça no centro, fases em anéis concêntricos,
- * seleções avançando por linhas douradas. No mobile, arraste horizontalmente.
+ * Árvore circular do mata-mata: taça no centro, fases em anéis concêntricos.
+ * Um arco liga os dois times de cada confronto (quem enfrenta quem) e uma
+ * linha dourada acompanha o vencedor até a fase seguinte. Em telas estreitas,
+ * arraste horizontalmente para explorar.
  */
 export function CircularBracket({ initialData }: CircularBracketProps) {
   const { data } = useWorldCupData(initialData);
@@ -35,8 +37,8 @@ export function CircularBracket({ initialData }: CircularBracketProps) {
       className="bracket-scroll w-full cursor-grab overflow-x-auto overscroll-x-contain active:cursor-grabbing"
       onClick={() => setSelected(null)}
     >
-      <div className="relative mx-auto aspect-square w-full min-w-[860px] max-w-[1080px] select-none">
-        <BracketEdges edges={layout.edges} />
+      <div className="relative mx-auto aspect-square w-[min(92vw,72vh,1080px)] min-w-[640px] select-none">
+        <BracketEdges edges={layout.edges} pairings={layout.pairings} />
         <TrophyCenter champion={layout.champion} />
 
         {layout.nodes.map((node) => (
@@ -63,7 +65,7 @@ export function CircularBracket({ initialData }: CircularBracketProps) {
         </AnimatePresence>
       </div>
 
-      <p className="pb-6 pt-2 text-center text-xs text-stone-500 md:hidden">
+      <p className="pb-6 pt-2 text-center text-xs text-stone-500 sm:hidden">
         Arraste para o lado para explorar o chaveamento
       </p>
     </div>
